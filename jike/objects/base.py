@@ -6,7 +6,6 @@ Special class designed for Jike Metro
 
 from collections import deque
 from collections.abc import Iterable, Sequence
-from ..utils import converter
 from ..constants import STREAM_CAPACITY_LIMIT
 
 
@@ -173,6 +172,7 @@ class List(JikeSequenceBase, JikeFetcher):
         if self.converter:
             more = [self.converter(**item) for item in result['data']]
         else:
+            from ..utils import converter
             more = [converter[item['type']](**item) for item in result['data']]
         self.extend(more)
         return more
@@ -212,6 +212,7 @@ class Stream(JikeStreamBase, JikeFetcher):
             self.load_more_key = result['loadMoreKey']
         except KeyError:
             self.load_more_key = None
+        from ..utils import converter
         more = [converter[item['type']](**item) for item in result['data']]
         self.extend(more)
         return more
@@ -242,6 +243,7 @@ class Stream(JikeStreamBase, JikeFetcher):
         updates = []
         for item in [t for t in result['data'] if t.get('type') != 'PERSONAL_UPDATE_SECTION']:
             if item['id'] != current_latest_id:
+                from ..utils import converter
                 updates.append(converter[item['type']](**item))
             else:
                 break

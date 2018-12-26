@@ -8,7 +8,8 @@ import webbrowser
 from threading import Timer
 from .session import JikeSession
 from .objects import List, Stream, User, Topic, JikeEmitter
-from .utils import *
+from .objects.message import OriginalPost, Repost, Comment
+from .utils import read_access_token, login, extract_url, notify, extract_link, upload_pictures, converter, check_token
 from .constants import ENDPOINTS, URL_VALIDATION_PATTERN, CHECK_UNREAD_COUNT_PERIOD
 
 
@@ -48,14 +49,11 @@ def notify_update(obj, unread):
 
 class JikeClient:
     def __init__(self, sync_unread=False):
-        self.auth_token = read_token()
-        if self.auth_token is None:
-            self.auth_token = login()
-            try:
-                write_token(self.auth_token)
-            except IOError:
-                pass
-        self.jike_session = JikeSession(self.auth_token)
+        self.access_token = read_access_token()
+        if self.access_token is None:
+            self.access_token = login()
+        self.access_token = check_token()
+        self.jike_session = JikeSession(self.access_token)
 
         self.collection = None
         self.news_feed = None
@@ -375,13 +373,12 @@ class JikeClient:
 
         CAUTION: Could be used for concurrency http request, but not tested and verified by author
         """
-        return JikeSession(self.auth_token)
+        return JikeSession(self.access_token)
 
     def relogin(self):
         """
         Re-login in case any problem related to auth_token
         """
-        self.auth_token = login()
-        write_token(self.auth_token)
+        self.access_token = login()
         self.jike_session.session.close()
-        self.jike_session = JikeSession(self.auth_token)
+        self.jike_session = JikeSession(self.access_token)

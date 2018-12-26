@@ -8,12 +8,13 @@ import requests
 import json
 import os
 import platform
+import time
 from collections import defaultdict
 from mimetypes import guess_type
 
 from .qr_code import make_qrcode
 from .constants import ENDPOINTS, AUTH_TOKEN_STORE_PATH, URL_VALIDATION_PATTERN
-from .objects.message import *
+from .objects.message import Answer, Comment, OfficialMessage, OriginalPost, PersonalUpdate, PersonalUpdateSection, Question, Repost
 
 converter = defaultdict(lambda: dict,
                         {
@@ -28,19 +29,44 @@ converter = defaultdict(lambda: dict,
                         })
 
 
-def read_token():
+def read_token_timestamp():
     if os.path.exists(AUTH_TOKEN_STORE_PATH):
         with open(AUTH_TOKEN_STORE_PATH, 'rt', encoding='utf-8') as fp:
             store = json.load(fp)
-        return store['auth_token']
+        return store['timestamp']
 
 
-def write_token(token):
+def read_refresh_token():
+    if os.path.exists(AUTH_TOKEN_STORE_PATH):
+        with open(AUTH_TOKEN_STORE_PATH, 'rt', encoding='utf-8') as fp:
+            store = json.load(fp)
+        return store['refresh_token']
+
+
+def read_access_token():
+    if os.path.exists(AUTH_TOKEN_STORE_PATH):
+        with open(AUTH_TOKEN_STORE_PATH, 'rt', encoding='utf-8') as fp:
+            store = json.load(fp)
+        return store['access_token']
+
+
+def write_token(access_token, refresh_token):
+    timestamp = int(time.time())
     with open(AUTH_TOKEN_STORE_PATH, 'wt', encoding='utf-8') as fp:
         store = {
-            'auth_token': token
+            'timestamp': timestamp,
+            'access_token': access_token,
+            'refresh_token': refresh_token
         }
         json.dump(store, fp, indent=2)
+
+
+def check_token():
+    now_timestamp = int(time.time())
+    token_timestamp = read_token_timestamp()
+    if (now_timestamp - token_timestamp) > 600:
+        return refresh_auth_tokens(read_refresh_token())
+    return read_access_token()
 
 
 def wait_login(uuid):
@@ -57,7 +83,9 @@ def confirm_login(uuid):
     if res.status_code == 200:
         confirmed = res.json()
         if confirmed['confirmed'] is True:
-            return confirmed['token']
+            write_token(confirmed['x-jike-access-token'],
+                        confirmed['x-jike-refresh-token'])
+            return confirmed['x-jike-access-token']
         else:
             raise SystemExit('User not board Jike Metro, what a shame')
     res.raise_for_status()
@@ -90,6 +118,22 @@ def login():
             raise SystemExit('Login takes too long, abort')
 
     return token
+
+
+def refresh_auth_tokens(token):
+    res = requests.get(ENDPOINTS['app_auth_tokens_refresh'], headers={
+        'Origin': 'https://web.okjike.com',
+        'Referer': 'https://web.okjike.com/feed',
+        'x-jike-refresh-token': token
+    })
+    if res.status_code == 200:
+        token_refresh = res.json()
+        access_token = token_refresh['x-jike-access-token']
+        refresh_token = token_refresh['x-jike-refresh-token']
+        write_token(access_token, refresh_token)
+        return access_token
+    res.raise_for_status()
+    return False
 
 
 def extract_url(content):

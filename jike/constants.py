@@ -98,6 +98,8 @@ ENDPOINTS = {
     'create_session': '{_s_}://{_d_}/sessions.create'.format(**_f_),
     'wait_login': '{_s_}://{_d_}/sessions.wait_for_login'.format(**_f_),
     'confirm_login': '{_s_}://{_d_}/sessions.wait_for_confirmation'.format(**_f_),
+    # refresh access token
+    'app_auth_tokens_refresh': '{_s_}://{_d_}/app_auth_tokens.refresh'.format(**_f_),
     # myself
     'my_collections': '{_s_}://{_d_}/{_v_}/users/collections/list'.format(**_f_),
     # main page info stream
