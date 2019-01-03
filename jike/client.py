@@ -9,7 +9,7 @@ from threading import Timer
 from .session import JikeSession
 from .objects import List, Stream, User, Topic, JikeEmitter
 from .objects.message import OriginalPost, Repost, Comment
-from .utils import read_access_token, login, extract_url, notify, extract_link, upload_pictures, converter, check_token
+from .utils import read_access_token, read_refresh_token, write_token, login, extract_url, notify, extract_link, upload_pictures, converter, check_token
 from .constants import ENDPOINTS, URL_VALIDATION_PATTERN, CHECK_UNREAD_COUNT_PERIOD
 
 
@@ -50,11 +50,16 @@ def notify_update(obj, unread):
 class JikeClient:
     def __init__(self, sync_unread=False):
         self.access_token = read_access_token()
+        self.refresh_token = read_refresh_token()
         if self.access_token is None:
-            self.access_token = login()
-        self.access_token = check_token()
+            tokens = login()
+            self.access_token = tokens[0]
+            self.refresh_token = tokens[1]
+            try:
+                write_token(self.access_token, self.refresh_token)
+            except IOError:
+                pass
         self.jike_session = JikeSession(self.access_token)
-
         self.collection = None
         self.news_feed = None
         self.following_update = None
@@ -66,7 +71,8 @@ class JikeClient:
                 CHECK_UNREAD_COUNT_PERIOD,
                 check_unread_count_periodically,
                 args=(self,)
-            ).start()
+            )
+            self.timer.start()
 
         self.notified_topics = ['all']
         self.notified_users = ['all']
@@ -377,8 +383,8 @@ class JikeClient:
 
     def relogin(self):
         """
-        Re-login in case any problem related to auth_token
+        Re-login in case any problem related to access_token
         """
-        self.access_token = login()
+        self.access_token, self.refresh_token = login()
         self.jike_session.session.close()
         self.jike_session = JikeSession(self.access_token)

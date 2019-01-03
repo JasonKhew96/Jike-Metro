@@ -15,16 +15,18 @@ class TestJikeUtils(unittest.TestCase):
         self.session.close()
 
     def test_read_token(self):
-        mocked_metro_json = '{"auth_token": "token"}'
+        mocked_metro_json = '{"timestamp": 0, "access_token": "token", "refresh_token": "token"}'
         with patch('os.path.exists', return_value=True), \
              patch('builtins.open', mock_open(read_data=mocked_metro_json)):
-            mock_token = utils.read_token()
-        self.assertEqual(mock_token, 'token')
+            mock_access_token = utils.read_access_token()
+            mock_refresh_token = utils.read_refresh_token()
+        self.assertEqual(mock_access_token, 'token')
+        self.assertEqual(mock_refresh_token, 'token')
 
     def test_write_token(self):
         m = mock_open()
         with patch('builtins.open', m):
-            utils.write_token('token')
+            utils.write_token('token', 'token')
         m.assert_called_once_with(constants.AUTH_TOKEN_STORE_PATH, 'wt', encoding='utf-8')
         handle = m()
         handle.write.assert_called()
@@ -89,10 +91,10 @@ class TestJikeUtils(unittest.TestCase):
 
     @responses.activate
     def test_confirm_login(self):
-        success_response = {'confirmed': True, 'token': 'token'}
+        success_response = {'confirmed': True, 'x-jike-access-token': 'token', 'x-jike-refresh-token': 'token'}
         responses.add(responses.GET, constants.ENDPOINTS['confirm_login'],
                       json=success_response, status=200)
-        failed_response = {'confirmed': False, 'token': 'token'}
+        failed_response = {'confirmed': False, 'x-jike-access-token': 'token', 'x-jike-refresh-token': 'token'}
         responses.add(responses.GET, constants.ENDPOINTS['confirm_login'],
                       json=failed_response, status=200)
         responses.add(responses.GET, constants.ENDPOINTS['confirm_login'],
@@ -100,7 +102,8 @@ class TestJikeUtils(unittest.TestCase):
         uuid = {'uuid': '123'}
         # success call
         result = utils.confirm_login(uuid)
-        self.assertEqual(result, 'token')
+        self.assertEqual(result[0], 'token')
+        self.assertEqual(result[1], 'token')
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, constants.ENDPOINTS['confirm_login'] + '?' + urlencode(uuid))
         self.assertEqual(responses.calls[0].response.json(), success_response)

@@ -83,9 +83,8 @@ def confirm_login(uuid):
     if res.status_code == 200:
         confirmed = res.json()
         if confirmed['confirmed'] is True:
-            write_token(confirmed['x-jike-access-token'],
-                        confirmed['x-jike-refresh-token'])
-            return confirmed['x-jike-access-token']
+            return (confirmed['x-jike-access-token'],
+                    confirmed['x-jike-refresh-token'])
         else:
             raise SystemExit('User not board Jike Metro, what a shame')
     res.raise_for_status()
@@ -109,15 +108,15 @@ def login():
         if attempt_counter > 5:
             raise SystemExit('Login takes too long, abort')
 
-    token = None
+    tokens = None
     attempt_counter = 1
-    while token is None:
-        token = confirm_login(uuid)
+    while tokens is None:
+        tokens = confirm_login(uuid)
         attempt_counter += 1
         if attempt_counter > 5:
             raise SystemExit('Login takes too long, abort')
 
-    return token
+    return tokens
 
 
 def refresh_auth_tokens(token):

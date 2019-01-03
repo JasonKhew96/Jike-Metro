@@ -7,7 +7,8 @@ from jike.client import JikeClient
 
 class TestJikeClient(unittest.TestCase):
     def setUp(self):
-        self.read_token = patch('jike.client.read_token').start()
+        self.read_access_token = patch('jike.client.read_access_token').start()
+        self.read_refresh_token = patch('jike.client.read_refresh_token').start()
         self.timer_start = patch('jike.client.Timer.start').start()
 
         self.MockJikeSession = patch('jike.client.JikeSession').start()
@@ -21,7 +22,8 @@ class TestJikeClient(unittest.TestCase):
         self.mock_user = Mock()
         self.MockUser.return_value = self.mock_user
 
-        self.read_token.return_value = 'token'
+        self.read_access_token.return_value = 'token'
+        self.read_refresh_token.return_value = 'token'
         self.timer_start.return_value = None
         self.jike_client = JikeClient(sync_unread=True)
 
@@ -30,17 +32,19 @@ class TestJikeClient(unittest.TestCase):
         patch.stopall()
 
     def test_init(self):
-        self.assertEqual(self.jike_client.auth_token, 'token')
+        self.assertEqual(self.jike_client.access_token, 'token')
+        self.assertEqual(self.jike_client.refresh_token, 'token')
         self.assertIsNotNone(self.jike_client.jike_session)
         self.assertIsNone(self.jike_client.collection)
         self.assertIsNone(self.jike_client.news_feed)
         self.assertIsNone(self.jike_client.following_update)
         self.assertEqual(self.jike_client.unread_count, 0)
-        self.read_token.assert_called_once()
+        self.read_access_token.assert_called_once()
+        self.read_refresh_token.assert_called_once()
         self.MockJikeSession.assert_called_once()
         self.timer_start.assert_called_once()
         # first login
-        self.read_token.return_value = None
+        self.read_access_token.return_value = None
         with patch('jike.client.login', return_value='login_token') as login, \
                 patch('jike.client.write_token', return_value=None) as token_write:
             JikeClient()
@@ -437,7 +441,7 @@ class TestJikeClient(unittest.TestCase):
         mock_topics.load_more.assert_called_once()
 
     def test__create_new_jike_session(self):
-        self.jike_client.auth_token = 'new_token'
+        self.jike_client.access_token = 'new_token'
         self.jike_client._create_new_jike_session()
         self.MockJikeSession.assert_called_with('new_token')
 

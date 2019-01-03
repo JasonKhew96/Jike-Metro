@@ -2,6 +2,7 @@ import unittest
 import requests
 import responses
 from urllib.parse import urlencode
+from unittest.mock import patch
 
 from jike.session import JikeSession
 
@@ -9,6 +10,8 @@ from jike.session import JikeSession
 class TestJikeSession(unittest.TestCase):
     def setUp(self):
         self.jike_session = JikeSession('token')
+        self.check_token = patch('jike.session.check_token').start()
+        self.check_token.return_value = 'token'
 
     def tearDown(self):
         del self.jike_session
@@ -16,7 +19,7 @@ class TestJikeSession(unittest.TestCase):
     def test_init(self):
         self.assertIsInstance(self.jike_session.session, requests.Session)
         self.assertEqual(self.jike_session.token, 'token')
-        self.assertEqual(self.jike_session.headers['x-jike-app-auth-jwt'], 'token')
+        self.assertEqual(self.jike_session.headers['x-jike-access-token'], 'token')
 
     def test_repr(self):
         self.assertEqual(repr(self.jike_session), 'JikeSession(token...token)')
@@ -29,7 +32,7 @@ class TestJikeSession(unittest.TestCase):
         self.jike_session.get(url, params=params)
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url + '?' + urlencode(params))
-        self.assertEqual(responses.calls[0].request.headers['x-jike-app-auth-jwt'], 'token')
+        self.assertEqual(responses.calls[0].request.headers['x-jike-access-token'], 'token')
         self.assertEqual(responses.calls[0].response.status_code, 200)
 
     @responses.activate
@@ -41,7 +44,7 @@ class TestJikeSession(unittest.TestCase):
         self.jike_session.post(url, params=params, json=json)
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, url + '?' + urlencode(params))
-        self.assertEqual(responses.calls[0].request.headers['x-jike-app-auth-jwt'], 'token')
+        self.assertEqual(responses.calls[0].request.headers['x-jike-access-token'], 'token')
         self.assertEqual(responses.calls[0].response.status_code, 200)
 
 
