@@ -81,7 +81,7 @@ HEADERS = {
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
 
-    'x-jike-app-auth-jwt': None,
+    'x-jike-access-token': None,
     'App-Version': '4.1.0',
     'DNT': '1',
     'platform': 'web',
