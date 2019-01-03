@@ -44,6 +44,9 @@ PUBLIC_FIELDS = [
     'collectedTime',
     'collectTime',  # seems to be Jike typo
     'rollouts',
+    'readTrackInfo',
+    'hideable',
+    'deletable'
 ]
 
 # Object type for type: 'OFFICIAL_MESSAGE'

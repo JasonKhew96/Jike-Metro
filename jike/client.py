@@ -168,6 +168,7 @@ class JikeClient:
         topic_square.load_more()
         return topic_square
 
+    # broken
     @staticmethod
     def open_in_browser(url_or_message):
         if isinstance(url_or_message, str):

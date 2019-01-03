@@ -40,6 +40,19 @@ Topic = namedtuple_with_defaults(
                    'topicId',
                    'topicType',
                    'type',
-                   'updatedAt'
+                   'updatedAt',
+                   'enablePictureWatermark',
+                   'subscribersTextSuffix',
+                   'subscribersName',
+                   'toppingArea',
+                   'isUserTopicAdmin',
+                   'tips',
+                   'entryTab',
+                   'tabs',
+                   'preferSection',
+                   'isCommentForbidden',
+                   'subscribersDescription',
+                   'inShortcuts',
+                   'botCount'
                ])
 )

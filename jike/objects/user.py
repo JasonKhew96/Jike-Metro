@@ -66,6 +66,8 @@ User = namedtuple_with_defaults(
                    'statsCount',
                    'trailingIcons',
                    'wechatUnionId',
+                   'blocking',
+                   'isCancelled'
                ])
 )
 User.__repr__ = lambda user: 'User(screenName={screenName})'.format(
