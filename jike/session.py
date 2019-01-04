@@ -5,7 +5,6 @@ Session that communicates with Jike server
 """
 
 import requests
-import time
 from .utils import check_token
 from .constants import HEADERS
 

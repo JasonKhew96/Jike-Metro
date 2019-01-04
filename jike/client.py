@@ -52,9 +52,7 @@ class JikeClient:
         self.access_token = read_access_token()
         self.refresh_token = read_refresh_token()
         if self.access_token is None:
-            tokens = login()
-            self.access_token = tokens[0]
-            self.refresh_token = tokens[1]
+            self.access_token, self.refresh_token = login()
             try:
                 write_token(self.access_token, self.refresh_token)
             except IOError:
@@ -168,7 +166,6 @@ class JikeClient:
         topic_square.load_more()
         return topic_square
 
-    # broken
     @staticmethod
     def open_in_browser(url_or_message):
         if isinstance(url_or_message, str):
@@ -387,5 +384,6 @@ class JikeClient:
         Re-login in case any problem related to access_token
         """
         self.access_token, self.refresh_token = login()
+        write_token(self.access_token, self.refresh_token)
         self.jike_session.session.close()
         self.jike_session = JikeSession(self.access_token)

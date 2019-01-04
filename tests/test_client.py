@@ -45,7 +45,7 @@ class TestJikeClient(unittest.TestCase):
         self.timer_start.assert_called_once()
         # first login
         self.read_access_token.return_value = None
-        with patch('jike.client.login', return_value='login_token') as login, \
+        with patch('jike.client.login', return_value=['login_token', 'login_token']) as login, \
                 patch('jike.client.write_token', return_value=None) as token_write:
             JikeClient()
             login.assert_called_once()

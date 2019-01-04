@@ -13,7 +13,7 @@ from collections import defaultdict
 from mimetypes import guess_type
 
 from .qr_code import make_qrcode
-from .constants import ENDPOINTS, AUTH_TOKEN_STORE_PATH, URL_VALIDATION_PATTERN
+from .constants import ENDPOINTS, AUTH_TOKEN_STORE_PATH, URL_VALIDATION_PATTERN, HEADERS
 from .objects.message import Answer, Comment, OfficialMessage, OriginalPost, PersonalUpdate, PersonalUpdateSection, Question, Repost
 
 converter = defaultdict(lambda: dict,
@@ -120,11 +120,9 @@ def login():
 
 
 def refresh_auth_tokens(token):
-    res = requests.get(ENDPOINTS['app_auth_tokens_refresh'], headers={
-        'Origin': 'https://web.okjike.com',
-        'Referer': 'https://web.okjike.com/feed',
-        'x-jike-refresh-token': token
-    })
+    headers = dict(HEADERS)
+    headers.update({'x-jike-refresh-token': token})
+    res = requests.get(ENDPOINTS['app_auth_tokens_refresh'], headers)
     if res.status_code == 200:
         token_refresh = res.json()
         access_token = token_refresh['x-jike-access-token']
@@ -132,7 +130,6 @@ def refresh_auth_tokens(token):
         write_token(access_token, refresh_token)
         return access_token
     res.raise_for_status()
-    return False
 
 
 def extract_url(content):
